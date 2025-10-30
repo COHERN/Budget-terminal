@@ -188,6 +188,12 @@
     calc();
   });
 
+  // Print Calendar action
+const printCalBtn = document.getElementById('printCalBtn');
+printCalBtn?.addEventListener('click', () => {
+  window.print();
+});
+
   exportBtn?.addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(bills, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');

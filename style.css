@@ -131,3 +131,4 @@ td.center{text-align:center}
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
+.today { margin-left: 12px; white-space: nowrap; }

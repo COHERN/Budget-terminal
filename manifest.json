@@ -1,0 +1,20 @@
+{
+  "name": "Budget Terminal",
+  "short_name": "BudgetTerminal",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F4EDE1",
+  "theme_color": "#F4EDE1",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

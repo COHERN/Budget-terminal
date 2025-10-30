@@ -159,3 +159,11 @@ td.center{text-align:center}
 
 #main.hidden{opacity:0}
 #main{opacity:1;transition:opacity .6s ease}
+
+body {
+  background-color: #fafaf8;
+  background-image: url('paper-texture.png');
+  background-size: cover;
+  background-attachment: fixed;
+  transition: opacity 0.4s ease;
+}

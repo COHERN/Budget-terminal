@@ -202,3 +202,4 @@
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
   }
 })();
+<script src="app.js"></script>

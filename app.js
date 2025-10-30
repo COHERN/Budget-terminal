@@ -4,6 +4,13 @@
   const $ = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => [...r.querySelectorAll(s)];
   const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function setToday(){
+  const el = document.getElementById('todayDate');
+  if (!el) return;
+  el.textContent = new Date().toLocaleDateString('en-US', {
+    weekday:'short', month:'short', day:'numeric', year:'numeric'
+  });
+}
 
   // Splash
   const splash = $('#splash');

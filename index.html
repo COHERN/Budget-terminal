@@ -27,21 +27,30 @@
     <div id="main" class="hidden">
       <nav class="tabs">
         <div class="brand">Budget</div>
-        <span id="todayDate" class="today muted small"></span>  <!-- added -->
+        <span id="todayDate" class="today muted small"></span>
         <div class="spacer"></div>
         <button class="tab active" data-tab="quick">Quick Check</button>
         <button class="tab" data-tab="bills">Bills</button>
       </nav>
 
+      <!-- Quick Check -->
       <section id="tab-quick" class="tabpane active">
         <div class="card">
           <h2>Quick Check</h2>
+
           <div class="grid2">
             <label>Current Balance
-              <div class="inputWrap"><span class="prefix">$</span><input id="balance" inputmode="decimal" placeholder="0.00"></div>
+              <div class="inputWrap">
+                <span class="prefix">$</span>
+                <input id="balance" inputmode="decimal" placeholder="0.00">
+              </div>
             </label>
+
             <label>Purchase (optional)
-              <div class="inputWrap"><span class="prefix">$</span><input id="purchase" inputmode="decimal" placeholder="0.00"></div>
+              <div class="inputWrap">
+                <span class="prefix">$</span>
+                <input id="purchase" inputmode="decimal" placeholder="0.00">
+              </div>
             </label>
           </div>
 
@@ -65,16 +74,18 @@
             <span id="buyBadge" class="pill warning">Warning</span>
           </div>
 
-            <div class="muted small cadence" id="cadenceLine"></div>
-<div class="muted small" id="cadenceEarly"></div>
-<div class="muted small" id="cadenceLate"></div>
-          </div>
+          <!-- Cadence summary (auto-filled by app.js) -->
+          <div class="muted small cadence" id="cadenceLine"></div>
+          <div class="muted small" id="cadenceEarly"></div>
+          <div class="muted small" id="cadenceLate"></div>
         </div>
       </section>
 
+      <!-- Bills -->
       <section id="tab-bills" class="tabpane">
         <div class="card">
           <h2>Bills</h2>
+
           <div class="row gap">
             <button id="addBillBtn" class="btn">+ Add Bill</button>
             <button id="clearPaidBtn" class="btn ghost">Clear “Paid”</button>
@@ -84,6 +95,7 @@
               <span class="btn ghost">Import</span>
             </label>
           </div>
+
           <table id="billTable">
             <thead>
               <tr>
@@ -94,20 +106,28 @@
           </table>
 
           <!-- Print Calendar -->
-<div class="row gap" style="margin-top:12px">
-  <button id="printCalBtn" class="btn">🖨️ Print Calendar</button>
-</div>
-          
+          <div class="row gap" style="margin-top:12px">
+            <button id="printCalBtn" class="btn">🖨️ Print Calendar</button>
+          </div>
+
+          <!-- Hidden container the JS will fill for printing -->
+          <div id="calSheet" style="display:none"></div>
         </div>
       </section>
     </div>
   </div>
 
+  <!-- Bill row template -->
   <template id="billRowTpl">
     <tr>
       <td><input class="b-name"></td>
       <td><input class="b-due" inputmode="numeric"></td>
-      <td><div class="inputWrap small"><span class="prefix">$</span><input class="b-amt" inputmode="decimal"></div></td>
+      <td>
+        <div class="inputWrap small">
+          <span class="prefix">$</span>
+          <input class="b-amt" inputmode="decimal">
+        </div>
+      </td>
       <td class="center"><input type="checkbox" class="b-paid"></td>
       <td><button class="rowDel btn ghost">Del</button></td>
     </tr>

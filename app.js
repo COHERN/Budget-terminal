@@ -26,7 +26,10 @@
   }, 3000); // 3 seconds
 
   // ---------- tabs ----------
-  const panes = { quick: $('#tab-quick'), bills: $('#tab-bills') };
+  const panes = {
+    quick: $('#tab-quick'),
+    bills: $('#tab-bills'),
+  };
   $$('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
       $$('.tab').forEach(b => b.classList.remove('active'));
@@ -66,10 +69,6 @@
   const exportBtn    = $('#exportBtn');
   const importFile   = $('#importFile');
 
-  // Calendar print bits
-  const calSheetEl   = $('#calSheet');
-  const printCalBtn  = $('#printCalBtn');
-
   let bills = loadBills();
 
   // ---------- helpers ----------
@@ -86,6 +85,34 @@
     el.classList.add(level);
     el.textContent = level[0].toUpperCase() + level.slice(1);
   };
+
+  // Pretty formatting while typing (keeps 0–2 decimals)
+  function formatCurrencyInput(el){
+    let raw = (el.value || '').replace(/[^0-9.]/g,'');
+    const [intRaw, decRaw=''] = raw.split('.');
+    const intClean = intRaw.replace(/^0+(?=\d)/,'');
+    const intWithCommas = intClean.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const decimals = decRaw.slice(0,2);
+    el.value = intWithCommas + (decimals ? '.'+decimals : '');
+  }
+
+  // Clear “0 / 0.00” on focus
+  function clearZeroOnFocus(el){
+    el.addEventListener('focus', () => {
+      const v = (el.value || '').replace(/,/g,'').trim();
+      if (v === '0' || v === '0.0' || v === '0.00') el.value = '';
+    });
+  }
+
+  // Apply pretty typing to main inputs
+  if (balanceEl){
+    clearZeroOnFocus(balanceEl);
+    balanceEl.addEventListener('input', () => formatCurrencyInput(balanceEl));
+  }
+  if (purchaseEl){
+    clearZeroOnFocus(purchaseEl);
+    purchaseEl.addEventListener('input', () => formatCurrencyInput(purchaseEl));
+  }
 
   // Compute & render cadence totals (unpaid bills due by 1st vs 15th)
   function updateCadence() {
@@ -106,26 +133,29 @@
 
   // Main calculator for KPIs & badges
   function calc() {
-    const totalUnpaid = bills.reduce(
+    let totalUnpaid = bills.reduce(
       (sum, b) => sum + (!b.paid ? (+b.amount || 0) : 0), 0
     );
+    if (!Number.isFinite(totalUnpaid)) totalUnpaid = 0; // guard
     totalUnpaidEl.textContent = fmt.format(totalUnpaid);
 
-    const bal  = parseMoney(balanceEl);
-    const buy  = parseMoney(purchaseEl);
-    const left = bal - totalUnpaid;
+    let bal  = parseMoney(balanceEl);
+    let buy  = parseMoney(purchaseEl);
+    if (!Number.isFinite(bal)) bal = 0;
+    if (!Number.isFinite(buy)) buy = 0;
+
+    const left  = bal - totalUnpaid;
     const after = left - buy;
 
     leftAfterEl.textContent = fmt.format(left);
     afterBuyEl.textContent  = fmt.format(after);
 
-    // badges
     setBadge(coverageBadge, left >= 0 ? 'success' : 'danger');
     if (left < 0)       setBadge(buyBadge, 'danger');
     else if (after < 0) setBadge(buyBadge, 'warning');
     else                setBadge(buyBadge, 'success');
 
-    updateCadence(); // keep cadence line in sync anytime totals change
+    updateCadence();
   }
 
   // Bind a row’s inputs to a bill object
@@ -136,10 +166,20 @@
     const paid = $('.b-paid', tr);
     const del  = $('.rowDel', tr);
 
-    name.value   = bill.name   || '';
-    due.value    = bill.due    ?? '';
-    amt.value    = bill.amount != null ? bill.amount : '';
+    name.value   = bill.name || '';
+    due.value    = bill.due  ?? '';
+    amt.value    = (bill.amount === '' || bill.amount == null)
+      ? ''
+      : fmt.format(+bill.amount);
     paid.checked = !!bill.paid;
+
+    // friendly typing & clear-zero on the amount field
+    clearZeroOnFocus(amt);
+    amt.addEventListener('input', () => {
+      const pos = amt.selectionStart;
+      formatCurrencyInput(amt);
+      try { amt.setSelectionRange(pos, pos); } catch {}
+    });
 
     const update = () => {
       bill.name   = name.value.trim();
@@ -176,24 +216,11 @@
 
   // ---------- actions ----------
   addBillBtn?.addEventListener('click', () => {
-    bills.push({ name: '', due: '', amount: 0, paid: false });
+    bills.push({ name: '', due: '', amount: '', paid: false }); // start blank
     saveBills(bills);
     render();
     calc();
   });
-
-  // Reset All Data
-const resetBtn = document.getElementById('resetBtn');
-resetBtn?.addEventListener('click', () => {
-  if (confirm('This will erase all bills and reset everything. Continue?')) {
-    localStorage.removeItem('bt.bills.v1');
-    bills = [];
-    render();
-    calc();
-    alert('All data cleared. The app will now refresh.');
-    location.reload();
-  }
-});
 
   clearPaidBtn?.addEventListener('click', () => {
     bills.forEach(b => b.paid = false);
@@ -202,6 +229,11 @@ resetBtn?.addEventListener('click', () => {
     calc();
   });
 
+  // Print Calendar (simple)
+  const printCalBtn = document.getElementById('printCalBtn');
+  printCalBtn?.addEventListener('click', () => window.print());
+
+  // (Optional) export / import remain wired; buttons can be hidden via CSS
   exportBtn?.addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(bills, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -235,96 +267,9 @@ resetBtn?.addEventListener('click', () => {
     }
   });
 
-  // recalc on input
+  // recalc on input (kept for calc side-effects)
   balanceEl?.addEventListener('input',  calc);
   purchaseEl?.addEventListener('input', calc);
-
-  // ---------- printable calendar (Field Notes–ish + bills) ----------
-  function buildCalendarSheet(targetEl, date = new Date(), billsForMonth = []) {
-    const y  = date.getFullYear();
-    const m  = date.getMonth();
-    const first = new Date(y, m, 1);
-    const startWeekday = first.getDay();
-    const daysInMonth  = new Date(y, m+1, 0).getDate();
-    const monthName    = date.toLocaleString('en-US', { month: 'long' });
-
-    const byDay = new Map();
-    billsForMonth.forEach(b => {
-      const d = parseInt(b.due, 10);
-      if (Number.isFinite(d) && d >= 1 && d <= daysInMonth) {
-        if (!byDay.has(d)) byDay.set(d, []);
-        byDay.get(d).push(b);
-      }
-    });
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'cal';
-    wrapper.innerHTML = `
-      <div class="cal__hdr">
-        <div class="cal__yr--left">${y}</div>
-        <div class="cal__month">${monthName}</div>
-        <div class="cal__yr--right">${y}</div>
-      </div>
-      <div class="cal__wk">
-        <div>SUN</div><div>MON</div><div>TUE</div>
-        <div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
-      </div>
-      <div class="cal__grid"></div>
-    `;
-    const grid = wrapper.querySelector('.cal__grid');
-
-    for (let i = 0; i < startWeekday; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'cal__cell';
-      grid.appendChild(cell);
-    }
-
-    const short = (s, n = 26) => (s || '').length > n ? (s.slice(0, n - 1) + '…') : (s || '');
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const cell = document.createElement('div');
-      cell.className = 'cal__cell';
-
-      const num = document.createElement('div');
-      num.className = 'cal__num';
-      const weekday = (startWeekday + (d - 1)) % 7;
-      num.classList.toggle('cal__num--accent', weekday === 0);
-      num.textContent = d;
-      cell.appendChild(num);
-
-      const list = document.createElement('div');
-      list.className = 'cal__list';
-
-      const billsToday = byDay.get(d) || [];
-      billsToday.sort((a,b) =>
-        (a.paid === b.paid ? (+b.amount||0) - (+a.amount||0) : (a.paid ? 1 : -1))
-      );
-
-      billsToday.forEach(b => {
-        const item = document.createElement('div');
-        item.className = 'cal__item';
-        item.classList.add(b.paid ? 'cal__item--paid' : 'cal__item--due');
-        const amt = Number.isFinite(+b.amount) ? `$${fmt.format(+b.amount)}` : '';
-        item.textContent = short(`${b.name || 'Bill'} — ${amt}`);
-        list.appendChild(item);
-      });
-
-      cell.appendChild(list);
-      grid.appendChild(cell);
-    }
-
-    targetEl.innerHTML = '';
-    targetEl.appendChild(wrapper);
-  }
-
-  // Print button -> build calendar with bills then open print dialog
-  printCalBtn?.addEventListener('click', () => {
-    if (!calSheetEl) return;
-    buildCalendarSheet(calSheetEl, new Date(), bills);
-    calSheetEl.style.display = 'block';
-    window.print();
-    calSheetEl.style.display = 'none';
-  });
 
   // ---------- init ----------
   setToday();

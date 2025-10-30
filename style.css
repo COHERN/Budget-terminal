@@ -323,3 +323,126 @@ input:focus{
   body{ background:#fff !important; }
   .cal{ border:none; box-shadow:none; margin:0; padding:0; }
 }
+
+/* ===== Field Notes paper look (SCREEN + PRINT) ===== */
+
+/* Base calendar styling (applies on screen) */
+.cal{
+  background:#fff;
+  color:#1A1A1A;
+  max-width:900px;
+  margin:0 auto;
+  border:1px solid #e6e6e6;
+  border-radius:8px;
+  padding:24px 28px 28px;
+
+  /* Paper dot/graph texture */
+  background-image:
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size:24px 24px, 24px 24px;
+  background-position:0 0, 0 0;
+}
+
+/* Header with red rule + month */
+.cal__hdr{
+  position:relative;
+  margin-bottom:16px;
+  padding-top:8px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  font-weight:800;
+}
+.cal__hdr::before{
+  content:"";
+  position:absolute; left:0; right:0; top:0;
+  height:4px; background:#e2554a; border-radius:2px;
+}
+.cal__month{ text-align:center; font-size:40px; line-height:1.1; }
+.cal__yr--left,.cal__yr--right{
+  position:absolute; top:2px; font-weight:700; color:#a8a8a8; font-size:18px;
+}
+.cal__yr--left{ left:0; } .cal__yr--right{ right:0; }
+
+/* Weekday bar */
+.cal__wk{
+  display:grid; grid-template-columns:repeat(7,1fr);
+  border:1px solid #e6e6e6; border-bottom:none;
+  background:#fafafa;
+}
+.cal__wk > div{
+  padding:10px 8px; text-align:center; font-weight:700;
+  letter-spacing:.06em; font-size:12px; color:#6b7280;
+}
+
+/* Day grid */
+.cal__grid{ display:grid; grid-template-columns:repeat(7,1fr); border:1px solid #e6e6e6; }
+.cal__cell{
+  min-height:92px; padding:8px 8px 10px; position:relative;
+  border-right:1px solid #e6e6e6; border-top:1px solid #e6e6e6;
+
+  /* Faint horizontal ruling inside each day */
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.06) 0,
+      rgba(0,0,0,0.06) 1px,
+      transparent 1px,
+      transparent 24px
+    );
+  background-size:100% 24px;
+  background-position:0 26px; /* start below the day number */
+}
+.cal__cell:nth-child(7n){ border-right:none; }
+
+/* Subtle weekend tint */
+.cal__cell:nth-child(7n+1),
+.cal__cell:nth-child(7n){
+  background-color:#fcfcfc;
+}
+
+.cal__num{ font-weight:800; font-size:22px; line-height:1; color:#2b2b2b; }
+.cal__num--accent{ color:#e2554a; } /* Sundays in red */
+
+.cal__list{ margin-top:6px; display:flex; flex-direction:column; gap:3px; }
+.cal__item{ font-size:12px; line-height:1.2; color:#333; }
+.cal__item--paid{ color:#8aa67a; }  /* paid = muted green */
+.cal__item--due{  color:#222; }
+
+/* Mobile fit */
+@media (max-width:720px){
+  .cal{ padding:16px; }
+  .cal__month{ font-size:28px; }
+  .cal__cell{ min-height:72px; }
+}
+
+/* Print tweaks keep working */
+@media print{
+  @page{ size: Letter; margin: .5in; }
+  body{ background:#fff !important; -webkit-print-color-adjust:exact; color-adjust:exact; }
+  nav, .tabs, #splash, #main > :not(section#tab-bills){ display:none !important; }
+  .cal{ border:none; box-shadow:none; margin:0; padding:.25in; max-width:8in; }
+}
+
+/* === Always show Field Notes paper style on-screen too === */
+body, #app {
+  background-color: #fefdf9; /* warm off-white paper base */
+  background-image:
+    linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-attachment: fixed;
+}
+
+/* Give all cards subtle lift over the paper grid */
+.card {
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+/* Reduce harsh white from calendar if shown inline */
+.cal {
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}

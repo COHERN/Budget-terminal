@@ -225,3 +225,101 @@ input:focus{
   #calSheet{ display:block !important; }
   .cal{ width:100%; }
 }
+
+/* ===== Calendar (Field Notes style) ===== */
+.cal {
+  /* page frame */
+  background:#fff;
+  padding:24px 28px 28px;
+  border:1px solid #e6e6e6;
+  border-radius:8px;
+  max-width:900px;
+  margin:0 auto;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  color:#1a1a1a;
+}
+
+/* top red rule + month wordmark + side years */
+.cal__hdr{
+  position:relative;
+  margin-bottom:16px;
+  padding-top:8px;
+}
+.cal__hdr::before{
+  content:"";
+  position:absolute; left:0; right:0; top:0;
+  height:4px; background:#e2554a; /* Field Notes red */
+  border-radius:2px;
+}
+.cal__month{
+  text-align:center;
+  font-weight:800;
+  letter-spacing:0.08em;
+  font-size:40px;
+  line-height:1.1;
+  text-transform:uppercase;
+}
+.cal__yr--left,
+.cal__yr--right{
+  position:absolute; top:2px;
+  font-weight:700; color:#b2b2b2; font-size:20px;
+}
+.cal__yr--left{ left:0; }
+.cal__yr--right{ right:0; }
+
+/* weekday strip */
+.cal__wk{
+  display:grid; grid-template-columns:repeat(7,1fr);
+  gap:0;
+  border:1px solid #e6e6e6; border-bottom:none;
+  background:#fafafa;
+}
+.cal__wk > div{
+  padding:10px 8px;
+  text-align:center;
+  font-weight:700;
+  letter-spacing:0.06em;
+  font-size:12px;
+  color:#6b7280;
+}
+
+/* grid */
+.cal__grid{
+  display:grid; grid-template-columns:repeat(7,1fr);
+  border:1px solid #e6e6e6;
+}
+.cal__cell{
+  min-height:92px;
+  border-right:1px solid #e6e6e6;
+  border-top:1px solid #e6e6e6;
+  padding:8px 8px 10px;
+  position:relative;
+}
+.cal__cell:nth-child(7n){ border-right:none; }        /* end of row */
+
+/* shade weekends lightly (Field Notes vibe) */
+.cal__cell:nth-child(7n+1){ background:#fcfcfc; }     /* Sunday column */
+.cal__cell:nth-child(7n){   background:#fcfcfc; }     /* Saturday column */
+
+/* big day number */
+.cal__num{
+  font-weight:800;
+  font-size:22px;
+  line-height:1;
+  color:#2b2b2b;
+}
+.cal__num--accent{ color:#e2554a; }                  /* Sundays in red */
+
+/* bill list inside each day */
+.cal__list{ margin-top:6px; display:flex; flex-direction:column; gap:3px; }
+.cal__item{ font-size:12px; line-height:1.2; color:#333; }
+.cal__item--paid{ color:#8aa67a; }                   /* paid = muted green */
+.cal__item--due{  color:#222; }
+
+@media print{
+  /* Fill letter page nicely; hide app chrome */
+  @page{ size: Letter; margin: 0.5in; }
+  nav.tabs, .tabs, .card:not(:has(.cal)), #splash{ display:none !important; }
+  body{ background:#fff !important; }
+  .cal{ border:none; box-shadow:none; margin:0; padding:0; }
+}

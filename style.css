@@ -156,3 +156,6 @@ td.center{text-align:center}
   opacity: 1;
   transition: opacity 0.6s ease;
 }
+
+#main.hidden{opacity:0}
+#main{opacity:1;transition:opacity .6s ease}

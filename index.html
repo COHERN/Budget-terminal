@@ -89,11 +89,16 @@
           <div class="row gap">
             <button id="addBillBtn" class="btn">+ Add Bill</button>
             <button id="clearPaidBtn" class="btn ghost">Clear “Paid”</button>
-            <button id="exportBtn" class="btn ghost">Export backup (JSON)</button>
-            <label class="file">
+
+            <!-- Hidden Import/Export (unhide by removing 'hidden-soft') -->
+            <button id="exportBtn" class="btn ghost hidden-soft">Export backup (JSON)</button>
+            <label class="file hidden-soft">
               <input type="file" id="importFile" accept="application/json" hidden>
               <span class="btn ghost">Import</span>
             </label>
+
+            <!-- Optional: full reset -->
+            <button id="resetBtn" class="btn danger ghost">Reset All Data</button>
           </div>
 
           <table id="billTable">
@@ -111,13 +116,6 @@
           </div>
 
           <!-- Hidden container the JS will fill for printing -->
-
-          <!-- Reset All Data -->
-<div class="row gap" style="margin-top:12px">
-  <button id="resetBtn" class="btn danger">🧹 Reset All Data</button>
-</div>
-
-          
           <div id="calSheet" style="display:none"></div>
         </div>
       </section>
@@ -127,12 +125,12 @@
   <!-- Bill row template -->
   <template id="billRowTpl">
     <tr>
-      <td><input class="b-name"></td>
-      <td><input class="b-due" inputmode="numeric"></td>
+      <td><input class="b-name" placeholder="Name"></td>
+      <td><input class="b-due"  inputmode="numeric" placeholder="1–31"></td>
       <td>
         <div class="inputWrap small">
           <span class="prefix">$</span>
-          <input class="b-amt" inputmode="decimal">
+          <input class="b-amt" inputmode="decimal" placeholder="0.00">
         </div>
       </td>
       <td class="center"><input type="checkbox" class="b-paid"></td>

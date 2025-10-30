@@ -202,3 +202,19 @@ input:focus{
 
 /* Friendlier placeholder */
 .inputWrap input::placeholder{ color:#9CA3AF; }
+
+/* Stronger input contrast & focus */
+.inputWrap input{
+  border:1.5px solid var(--rule);
+  background:#fff;
+}
+input:focus{
+  outline:2px solid var(--accent);
+  box-shadow:0 0 0 3px rgba(201,162,39,.15);
+}
+
+/* Larger tap targets on mobile */
+@media (max-width:720px){
+  .btn{ padding:12px 16px }
+  .inputWrap input{ padding:14px 14px 14px 24px }
+}

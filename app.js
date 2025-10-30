@@ -21,14 +21,6 @@
     });
   }
 
-  // ---------- splash ----------
-  const splash = $('#splash');
-  const main   = $('#main');
-  setTimeout(() => {
-    if (splash) splash.classList.add('hidden');
-    if (main)   main.classList.remove('hidden');
-  }, 3000);
-
   // ---------- tabs ----------
   const panes = { quick: $('#tab-quick'), bills: $('#tab-bills') };
   $$('.tab').forEach(btn => {

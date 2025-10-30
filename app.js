@@ -26,10 +26,7 @@
   }, 3000); // 3 seconds
 
   // ---------- tabs ----------
-  const panes = {
-    quick: $('#tab-quick'),
-    bills: $('#tab-bills'),
-  };
+  const panes = { quick: $('#tab-quick'), bills: $('#tab-bills') };
   $$('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
       $$('.tab').forEach(b => b.classList.remove('active'));
@@ -58,9 +55,9 @@
   const buyBadge      = $('#buyBadge');
 
   // Cadence summary (1st vs 15th)
-  const cadenceLine = $('#cadenceLine');   // optional label
-  const cadenceEarly = $('#cadenceEarly'); // "By 1st: $…"
-  const cadenceLate  = $('#cadenceLate');  // "By 15th: $…"
+  const cadenceLine  = $('#cadenceLine');
+  const cadenceEarly = $('#cadenceEarly');
+  const cadenceLate  = $('#cadenceLate');
 
   // Bills table
   const tbody        = $('#billTable tbody');
@@ -68,6 +65,10 @@
   const clearPaidBtn = $('#clearPaidBtn');
   const exportBtn    = $('#exportBtn');
   const importFile   = $('#importFile');
+
+  // Calendar print bits
+  const calSheetEl   = $('#calSheet');
+  const printCalBtn  = $('#printCalBtn');
 
   let bills = loadBills();
 
@@ -135,10 +136,10 @@
     const paid = $('.b-paid', tr);
     const del  = $('.rowDel', tr);
 
-    name.value     = bill.name   || '';
-    due.value      = bill.due    ?? '';
-    amt.value      = bill.amount != null ? bill.amount : '';
-    paid.checked   = !!bill.paid;
+    name.value   = bill.name   || '';
+    due.value    = bill.due    ?? '';
+    amt.value    = bill.amount != null ? bill.amount : '';
+    paid.checked = !!bill.paid;
 
     const update = () => {
       bill.name   = name.value.trim();
@@ -188,12 +189,6 @@
     calc();
   });
 
-  // Print Calendar action
-const printCalBtn = document.getElementById('printCalBtn');
-printCalBtn?.addEventListener('click', () => {
-  window.print();
-});
-
   exportBtn?.addEventListener('click', () => {
     const blob = new Blob([JSON.stringify(bills, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -230,6 +225,93 @@ printCalBtn?.addEventListener('click', () => {
   // recalc on input
   balanceEl?.addEventListener('input',  calc);
   purchaseEl?.addEventListener('input', calc);
+
+  // ---------- printable calendar (Field Notes–ish + bills) ----------
+  function buildCalendarSheet(targetEl, date = new Date(), billsForMonth = []) {
+    const y  = date.getFullYear();
+    const m  = date.getMonth();
+    const first = new Date(y, m, 1);
+    const startWeekday = first.getDay();
+    const daysInMonth  = new Date(y, m+1, 0).getDate();
+    const monthName    = date.toLocaleString('en-US', { month: 'long' });
+
+    const byDay = new Map();
+    billsForMonth.forEach(b => {
+      const d = parseInt(b.due, 10);
+      if (Number.isFinite(d) && d >= 1 && d <= daysInMonth) {
+        if (!byDay.has(d)) byDay.set(d, []);
+        byDay.get(d).push(b);
+      }
+    });
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'cal';
+    wrapper.innerHTML = `
+      <div class="cal__hdr">
+        <div class="cal__yr--left">${y}</div>
+        <div class="cal__month">${monthName}</div>
+        <div class="cal__yr--right">${y}</div>
+      </div>
+      <div class="cal__wk">
+        <div>SUN</div><div>MON</div><div>TUE</div>
+        <div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+      </div>
+      <div class="cal__grid"></div>
+    `;
+    const grid = wrapper.querySelector('.cal__grid');
+
+    for (let i = 0; i < startWeekday; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cal__cell';
+      grid.appendChild(cell);
+    }
+
+    const short = (s, n = 26) => (s || '').length > n ? (s.slice(0, n - 1) + '…') : (s || '');
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'cal__cell';
+
+      const num = document.createElement('div');
+      num.className = 'cal__num';
+      const weekday = (startWeekday + (d - 1)) % 7;
+      num.classList.toggle('cal__num--accent', weekday === 0);
+      num.textContent = d;
+      cell.appendChild(num);
+
+      const list = document.createElement('div');
+      list.className = 'cal__list';
+
+      const billsToday = byDay.get(d) || [];
+      billsToday.sort((a,b) =>
+        (a.paid === b.paid ? (+b.amount||0) - (+a.amount||0) : (a.paid ? 1 : -1))
+      );
+
+      billsToday.forEach(b => {
+        const item = document.createElement('div');
+        item.className = 'cal__item';
+        item.classList.add(b.paid ? 'cal__item--paid' : 'cal__item--due');
+        const amt = Number.isFinite(+b.amount) ? `$${fmt.format(+b.amount)}` : '';
+        item.textContent = short(`${b.name || 'Bill'} — ${amt}`);
+        list.appendChild(item);
+      });
+
+      cell.appendChild(list);
+      grid.appendChild(cell);
+    }
+
+    targetEl.innerHTML = '';
+    targetEl.appendChild(wrapper);
+  }
+
+  // Print button -> build calendar with bills then open print dialog
+  printCalBtn?.addEventListener('click', () => {
+    if (!calSheetEl) return;
+    buildCalendarSheet(calSheetEl, new Date(), bills);
+    calSheetEl.style.display = 'block';
+    window.print();
+    calSheetEl.style.display = 'none';
+  });
 
   // ---------- init ----------
   setToday();

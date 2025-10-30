@@ -167,3 +167,42 @@ body {
   background-attachment: fixed;
   transition: opacity 0.4s ease;
 }
+
+/* ---------- Calendar layout (screen + print) ---------- */
+#calSheet { display: none; }
+
+body.print-mode #main { display: none !important; }
+body.print-mode #calSheet { display: block !important; }
+
+/* Field Notes–ish look */
+.cal { width: 100%; max-width: 900px; margin: 0 auto; padding: 16px; }
+.cal__hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px; }
+.cal__month { font-weight: 900; letter-spacing: 2px; font-size: 28px; }
+.cal__yr { font-weight: 700; opacity: .8; }
+.cal__wk { display:grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
+.cal__wk > div { text-align:center; font-weight: 700; font-size: 12px; opacity: .7; }
+
+.cal__grid { display:grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal__cell {
+  min-height: 90px;
+  border: 1px solid rgba(0,0,0,.15);
+  background: #fff;
+  padding: 6px;
+  border-radius: 6px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04) inset;
+}
+.cal__num { font-weight: 800; font-size: 12px; opacity: .8; }
+.cal__num--accent { color: #C76E28; } /* Sunday accent, matches your theme */
+.cal__list { margin-top: 4px; display: grid; gap: 2px; }
+.cal__item { font-size: 11px; line-height: 1.25; border-radius: 4px; padding: 2px 4px; }
+.cal__item--due   { background: rgba(199,110,40,.10); border: 1px solid rgba(199,110,40,.35); }
+.cal__item--paid  { background: rgba(45,90,39,.10);  border: 1px solid rgba(45,90,39,.35); }
+
+/* Print rules: show calendar only; ensure colors render */
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: #fff !important; }
+  #main { display: none !important; }
+  #calSheet { display: block !important; }
+  .cal { padding: 0; }
+}

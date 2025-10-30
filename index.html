@@ -11,10 +11,25 @@
 </head>
 <body>
   <div id="app">
+   
     <!-- Splash -->
 <div id="splash" class="splash swirl-loader">
-  <img src="0402959E-B9C8-45E4-878E-C6589CD46A0A.png" alt="Loading" class="swirl">
+  <svg class="swirl-svg" viewBox="0 0 100 100" aria-label="Loading">
+    <!-- faux spiral made from shrinking arcs -->
+    <path d="
+      M50,15
+      a35,35 0 1,1 0,70
+      a30,30 0 1,1 0,-60
+      a25,25 0 1,1 0,50
+      a20,20 0 1,1 0,-40
+      a15,15 0 1,1 0,30
+      a10,10 0 1,1 0,-20
+      a5,5   0 1,1 0,10
+    " fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+  </svg>
 </div>
+
+  
     <!-- Main -->
     <div id="main" class="hidden">
       <nav class="tabs">

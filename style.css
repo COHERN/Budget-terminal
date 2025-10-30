@@ -181,3 +181,24 @@ td.center{text-align:center}
 
 #exportBtn,
 .file { display: none !important; }
+
+/* Stronger input visuals */
+.inputWrap input{
+  padding:12px 12px 12px 22px;
+  width:100%;
+  border:1.5px solid #cfcfcf;         /* thicker, higher-contrast */
+  border-radius:10px;
+  background:#fff;
+  color:var(--ink);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.06);  /* subtle inset depth */
+}
+
+/* Clearer focus */
+input:focus{
+  outline:2px solid var(--accent);
+  background:#fff;
+  box-shadow: 0 0 0 3px rgba(201,162,39,.18);   /* accent glow */
+}
+
+/* Friendlier placeholder */
+.inputWrap input::placeholder{ color:#9CA3AF; }

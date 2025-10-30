@@ -1,5 +1,333 @@
 // app.js — Budget Terminal (v3.3)
+// app.js — Budget Terminal (v3.3)
 
+(() => {
+  // ---------- utils ----------
+  const $  = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const fmt = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // debounce helper (used for saving)
+  const debounce = (fn, ms=250) => {
+    let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  };
+
+  // Show today's date in the header
+  function setToday() {
+    const el = $('#todayDate');
+    if (!el) return;
+    el.textContent = new Date().toLocaleDateString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+    });
+  }
+
+  // ---------- splash ----------
+  const splash = $('#splash');
+  const main   = $('#main');
+  setTimeout(() => {
+    if (splash) splash.classList.add('hidden');
+    if (main)   main.classList.remove('hidden');
+  }, 3000);
+
+  // ---------- tabs ----------
+  const panes = { quick: $('#tab-quick'), bills: $('#tab-bills') };
+  $$('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      Object.values(panes).forEach(p => p.classList.remove('active'));
+      panes[btn.dataset.tab]?.classList.add('active');
+    }, { passive: true });
+  });
+
+  // ---------- storage ----------
+  const KEY = 'bt.bills.v1';
+  const loadBills = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
+  const _save = (b) => localStorage.setItem(KEY, JSON.stringify(b));
+  const saveBills = debounce(_save, 200); // debounced write
+
+  // ---------- elements ----------
+  const balanceEl     = $('#balance');
+  const purchaseEl    = $('#purchase');
+  const totalUnpaidEl = $('#totalUnpaid');
+  const leftAfterEl   = $('#leftAfter');
+  const afterBuyEl    = $('#afterBuy');
+  const coverageBadge = $('#coverageBadge');
+  const buyBadge      = $('#buyBadge');
+
+  const cadenceLine  = $('#cadenceLine');
+  const cadenceEarly = $('#cadenceEarly');
+  const cadenceLate  = $('#cadenceLate');
+
+  const tbody        = $('#billTable tbody');
+  const addBillBtn   = $('#addBillBtn');
+  const clearPaidBtn = $('#clearPaidBtn');
+  const resetBtn     = $('#resetBtn');
+  const exportBtn    = $('#exportBtn');
+  const importFile   = $('#importFile');
+
+  const calSheetEl   = $('#calSheet');
+  const printCalBtn  = $('#printCalBtn');
+
+  let bills = loadBills();
+
+  // ---------- helpers ----------
+  const parseMoneyFromEl = (el) => {
+    if (!el) return 0;
+    const raw = String(el.value || '').replace(/[^0-9.-]/g,'');
+    const v = parseFloat(raw);
+    return Number.isFinite(v) ? v : 0;
+  };
+
+  const setBadge = (el, level) => {
+    el.classList.remove('success', 'warning', 'danger');
+    el.classList.add(level);
+    el.textContent = level[0].toUpperCase() + level.slice(1);
+  };
+
+  function updateCadence() {
+    const daysInMonth = new Date().getDate(); // not needed but harmless
+    const early = bills.filter(b => !b.paid && ((parseInt(b.due,10)||0) <= 15))
+                       .reduce((s,b)=> s + (+b.amount||0), 0);
+    const late  = bills.filter(b => !b.paid && ((parseInt(b.due,10)||0) > 15))
+                       .reduce((s,b)=> s + (+b.amount||0), 0);
+
+    if (cadenceLine)  cadenceLine.textContent  = 'Bills grouped by pay period:';
+    if (cadenceEarly) cadenceEarly.textContent = `By 1st: $${fmt.format(early)}`;
+    if (cadenceLate)  cadenceLate.textContent  = `By 15th: $${fmt.format(late)}`;
+  }
+
+  function calc() {
+    // totals
+    let totalUnpaid = bills.reduce((sum, b) => sum + (!b.paid ? (+b.amount || 0) : 0), 0);
+    totalUnpaid = Number.isFinite(totalUnpaid) ? totalUnpaid : 0;
+    totalUnpaidEl.textContent = fmt.format(totalUnpaid);
+
+    // inputs
+    const bal  = parseMoneyFromEl(balanceEl);
+    const buy  = parseMoneyFromEl(purchaseEl);
+    const left = (Number.isFinite(bal) ? bal : 0) - totalUnpaid;
+    const after = left - (Number.isFinite(buy) ? buy : 0);
+
+    leftAfterEl.textContent = fmt.format(left);
+    afterBuyEl.textContent  = fmt.format(after);
+
+    setBadge(coverageBadge, left >= 0 ? 'success' : 'danger');
+    if (left < 0)       setBadge(buyBadge, 'danger');
+    else if (after < 0) setBadge(buyBadge, 'warning');
+    else                setBadge(buyBadge, 'success');
+
+    updateCadence();
+  }
+
+  // select-on-focus + clear leading zeroes
+  function attachSelectOnFocus(root) {
+    $$('input', root).forEach(inp => {
+      inp.addEventListener('focus', () => {
+        // clear “0” / “0.00” then select
+        if (inp.value === '0' || inp.value === '0.00') inp.value = '';
+        // iOS-safe select
+        setTimeout(() => { try { inp.select(); } catch {} }, 0);
+      });
+      // format amounts on blur
+      if (inp.classList.contains('b-amt')) {
+        inp.addEventListener('blur', () => {
+          const v = parseFloat(String(inp.value).replace(/[^0-9.-]/g,''));
+          inp.value = Number.isFinite(v) ? fmt.format(v) : '';
+        });
+      }
+    });
+  }
+
+  // ---------- table binding ----------
+  const bindRow = (tr, bill) => {
+    const name = $('.b-name', tr);
+    const due  = $('.b-due', tr);
+    const amt  = $('.b-amt', tr);
+    const paid = $('.b-paid', tr);
+    const del  = $('.rowDel', tr);
+
+    name.value = bill.name || '';
+    due.value  = bill.due  ?? '';
+    amt.value  = (bill.amount != null && bill.amount !== '') ? fmt.format(+bill.amount) : '';
+    paid.checked = !!bill.paid;
+
+    const update = () => {
+      bill.name   = name.value.trim();
+      const parsedDue = parseInt(due.value || '0', 10);
+      bill.due    = Number.isFinite(parsedDue) ? parsedDue : '';
+      bill.amount = parseMoneyFromEl(amt);
+      bill.paid   = !!paid.checked;
+      saveBills(bills); // debounced
+      calc();
+    };
+
+    name.addEventListener('input',  update);
+    due.addEventListener('input',   update);
+    amt.addEventListener('input',   update);
+    paid.addEventListener('change', update);
+
+    del.addEventListener('click', () => {
+      if (!confirm(`Delete "${bill.name || 'this bill'}"?`)) return;
+      bills = bills.filter(b => b !== bill);
+      saveBills(bills);
+      render();
+      calc();
+    });
+
+    attachSelectOnFocus(tr);
+  };
+
+  function render() {
+    tbody.innerHTML = '';
+    bills.sort((a,b) => (a.due||99) - (b.due||99))
+         .forEach(bill => {
+            const tr = document.importNode($('#billRowTpl').content, true).firstElementChild;
+            bindRow(tr, bill);
+            tbody.appendChild(tr);
+         });
+  }
+
+  // ---------- actions ----------
+  addBillBtn?.addEventListener('click', () => {
+    bills.push({ name:'', due:'', amount:0, paid:false });
+    saveBills(bills);
+    render(); calc();
+  });
+
+  clearPaidBtn?.addEventListener('click', () => {
+    bills.forEach(b => b.paid = false);
+    saveBills(bills);
+    render(); calc();
+  });
+
+  resetBtn?.addEventListener('click', () => {
+    if (!confirm('Reset ALL data (bills + local totals)? This cannot be undone.')) return;
+    bills = [];
+    localStorage.removeItem(KEY);
+    render(); calc();
+  });
+
+  // optional hidden export/import (kept working even if hidden)
+  exportBtn?.addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(bills, null, 2)], { type:'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'budget-terminal-bills.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  importFile?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) {
+        bills = data.map(d => ({
+          name: d.name ?? '', due: d.due ?? '',
+          amount: +d.amount || 0, paid: !!d.paid
+        }));
+        saveBills(bills);
+        render(); calc();
+      }
+    } catch (err) {
+      alert('Import failed: ' + err.message);
+    } finally { e.target.value = ''; }
+  });
+
+  // recalcs
+  balanceEl?.addEventListener('input',  calc);
+  purchaseEl?.addEventListener('input', calc);
+  attachSelectOnFocus(document); // top-level inputs too
+
+  // ---------- printable calendar ----------
+  function buildCalendarSheet(targetEl, date = new Date(), billsForMonth = []) {
+    const y = date.getFullYear(), m = date.getMonth();
+    const first = new Date(y, m, 1);
+    const startWeekday = first.getDay();
+    const daysInMonth = new Date(y, m+1, 0).getDate();
+    const monthName = date.toLocaleString('en-US', { month: 'long' });
+
+    const byDay = new Map();
+    billsForMonth.forEach(b => {
+      const d = parseInt(b.due, 10);
+      if (Number.isFinite(d) && d>=1 && d<=daysInMonth) {
+        if (!byDay.has(d)) byDay.set(d, []);
+        byDay.get(d).push(b);
+      }
+    });
+
+    const wrap = document.createElement('div');
+    wrap.className = 'cal';
+    wrap.innerHTML = `
+      <div class="cal__hdr">
+        <div class="cal__yr--left">${y}</div>
+        <div class="cal__month">${monthName.toUpperCase()}</div>
+        <div class="cal__yr--right">${y}</div>
+      </div>
+      <div class="cal__wk">
+        <div>SUN</div><div>MON</div><div>TUE</div>
+        <div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+      </div>
+      <div class="cal__grid"></div>
+    `;
+    const grid = wrap.querySelector('.cal__grid');
+
+    for (let i=0;i<startWeekday;i++){
+      const cell = document.createElement('div'); cell.className='cal__cell'; grid.appendChild(cell);
+    }
+
+    const short = (s,n=26)=> (s||'').length>n ? (s.slice(0,n-1)+'…') : (s||'');
+    for (let d=1; d<=daysInMonth; d++){
+      const cell = document.createElement('div'); cell.className='cal__cell';
+
+      const num = document.createElement('div'); num.className='cal__num';
+      const weekday = (startWeekday + (d-1)) % 7;
+      if (weekday === 0) num.classList.add('cal__num--accent');
+      num.textContent = d; cell.appendChild(num);
+
+      const list = document.createElement('div'); list.className='cal__list';
+      const todays = (byDay.get(d) || []).sort((a,b)=> (a.paid===b.paid ? (+b.amount||0)-(+a.amount||0) : (a.paid?1:-1)));
+      todays.forEach(b => {
+        const item = document.createElement('div');
+        item.className = 'cal__item ' + (b.paid?'cal__item--paid':'cal__item--due');
+        const amt = isFinite(+b.amount) ? `$${fmt.format(+b.amount)}` : '';
+        item.textContent = short(`${b.name || 'Bill'} — ${amt}`);
+        list.appendChild(item);
+      });
+      cell.appendChild(list);
+      grid.appendChild(cell);
+    }
+
+    targetEl.innerHTML = '';
+    targetEl.appendChild(wrap);
+  }
+
+  // iOS/Safari-safe print
+  printCalBtn?.addEventListener('click', () => {
+    if (!calSheetEl) return;
+    buildCalendarSheet(calSheetEl, new Date(), bills);
+    calSheetEl.classList.add('print-ready');
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        window.print();
+        calSheetEl.classList.remove('print-ready');
+        calSheetEl.style.display = 'none';
+      }, 50);
+    });
+  });
+
+  // ---------- init ----------
+  setToday();
+  render();
+  calc();
+
+  // ---------- pwa ----------
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+})();
 (() => {
   // ---------- utils ----------
   const $  = (s, r = document) => r.querySelector(s);

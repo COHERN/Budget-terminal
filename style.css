@@ -119,3 +119,40 @@ td.center{text-align:center}
   .cal__item--paid{opacity:.5;text-decoration:line-through}
   .cal__item--due{font-weight:700}
 }
+
+/* Swirl loader */
+.swirl-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  height: 100vh;
+}
+
+.swirl {
+  width: 80px;
+  height: 80px;
+  animation: spin 3s linear infinite;
+  filter: invert(1); /* makes it white on black */
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Hide splash after load */
+#splash.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+#main.hidden {
+  opacity: 0;
+}
+#main {
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}

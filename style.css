@@ -136,3 +136,45 @@ td.center{text-align:center}
   touch-action: manipulation;
 }
 .today { margin-left: 12px; white-space: nowrap; }
+
+/* Bills inside calendar cells */
+.cal__hdr {
+  display:flex; justify-content:space-between; align-items:center;
+  font-weight:800; font-size:28px; margin-bottom:8px;
+}
+.cal__wk {
+  display:grid; grid-template-columns:repeat(7,1fr);
+  font-weight:700; text-align:center; margin-bottom:4px; font-size:12px;
+}
+.cal__grid {
+  display:grid; grid-template-columns:repeat(7,1fr);
+  border-top:1px solid var(--rule);
+  border-left:1px solid var(--rule);
+}
+.cal__cell {
+  position:relative; min-height:100px; border-right:1px solid var(--rule);
+  border-bottom:1px solid var(--rule); padding:4px;
+  vertical-align:top; font-size:12px; overflow:hidden;
+}
+.cal__num {
+  font-weight:700; margin-bottom:2px;
+}
+.cal__num--accent {
+  color:var(--danger);
+}
+.cal__list {
+  position:absolute; left:8px; right:8px; top:22px; bottom:6px;
+  display:flex; flex-direction:column; gap:2px;
+}
+.cal__item {
+  font-size:11px; line-height:1.2;
+  padding:2px 4px; border-radius:4px;
+  border:1px solid rgba(0,0,0,.12); background:#fff;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.cal__item--paid {
+  opacity:.5; text-decoration:line-through;
+}
+.cal__item--due {
+  border-color: var(--danger);
+}

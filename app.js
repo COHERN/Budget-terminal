@@ -182,6 +182,19 @@
     calc();
   });
 
+  // Reset All Data
+const resetBtn = document.getElementById('resetBtn');
+resetBtn?.addEventListener('click', () => {
+  if (confirm('This will erase all bills and reset everything. Continue?')) {
+    localStorage.removeItem('bt.bills.v1');
+    bills = [];
+    render();
+    calc();
+    alert('All data cleared. The app will now refresh.');
+    location.reload();
+  }
+});
+
   clearPaidBtn?.addEventListener('click', () => {
     bills.forEach(b => b.paid = false);
     saveBills(bills);

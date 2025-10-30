@@ -200,12 +200,15 @@
   balanceEl?.addEventListener('input', calc);
   purchaseEl?.addEventListener('input', calc);
 
-  // Initial
-  render();
-  calc();
+  // Initial — run once when app loads
+  setToday();   // show current date in header
+  render();     // draw saved bills
+  calc();       // update totals & badges
 
   // PWA (optional but harmless if present)
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+})();
   }
 })();

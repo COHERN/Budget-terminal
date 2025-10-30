@@ -100,3 +100,9 @@ td.center{text-align:center}
 
 /* Ensure splash never blocks taps after hide */
 #splash.hidden{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s ease}
+/* Ensure tabs are clickable on iOS */
+.tabs .tab {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}

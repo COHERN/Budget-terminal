@@ -11,7 +11,7 @@
   setTimeout(() => {
     if (splash) splash.classList.add('hidden');
     if (main) main.classList.remove('hidden');
-  }, 5000); // 5s per your setting
+  }, 3000); // 3s per your setting
 
   // Tabs
   const panes = {

@@ -117,7 +117,11 @@ td.center{text-align:center}
 
 /* Note */
 .cadence{opacity:.8;margin-top:10px;color:var(--muted)}
-
+.cadence span {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+}
 /* Mobile */
 @media (max-width:720px){
   .grid2,.grid3{grid-template-columns:1fr}

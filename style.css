@@ -178,3 +178,6 @@ td.center{text-align:center}
 .cal__item--due {
   border-color: var(--danger);
 }
+
+#exportBtn,
+.file { display: none !important; }

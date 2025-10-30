@@ -218,3 +218,10 @@ input:focus{
   .btn{ padding:12px 16px }
   .inputWrap input{ padding:14px 14px 14px 24px }
 }
+
+@media print{
+  body{ background:none; }
+  #app > *{ display:none !important; }
+  #calSheet{ display:block !important; }
+  .cal{ width:100%; }
+}

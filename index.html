@@ -2,114 +2,122 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Budget Terminal</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#FAFAF8" />
-  <link rel="icon" href="icons/icon-192.png" />
-  <link href="style.css" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ROUGH DRAFT — Budget Terminal</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#F2E7CE"/>
+  <link rel="icon" href="icons/icon-192.png">
+  <link href="style.css" rel="stylesheet">
 </head>
-<body class="paper">
+<body>
   <div id="app">
-    <div id="main">
-      <nav class="tabs">
-        <div class="brand">Budget</div>
-        <span id="todayDate" class="today muted small"></span>
-        <div class="spacer"></div>
-        <button class="tab active" data-tab="quick">Quick Check</button>
-        <button class="tab" data-tab="bills">Bills</button>
-      </nav>
+    <!-- Header / Tabs -->
+    <nav class="tabs">
+      <div class="brand">ROUGH DRAFT</div>
+      <span id="todayDate" class="today muted small"></span>
+      <div class="spacer"></div>
+      <button class="tab active" data-tab="quick">Quick Check</button>
+      <button class="tab" data-tab="bills">Bills</button>
+      <!-- Optional lock toggle (keystroke "L" also works) -->
+      <button id="lockBtn" class="tab ghost" title="Blur amounts (L)">Lock</button>
+    </nav>
 
-      <!-- Quick Check -->
-      <section id="tab-quick" class="tabpane active">
-        <div class="card">
-          <h2>Quick Check</h2>
+    <!-- Quick Check -->
+    <section id="tab-quick" class="tabpane active">
+      <div class="card">
+        <h2>Quick Check</h2>
 
-          <div class="grid2">
-            <label>Current Balance
-              <div class="inputWrap">
-                <span class="prefix">$</span>
-                <input id="balance" inputmode="decimal" placeholder="0.00">
-              </div>
-            </label>
-
-            <label>Purchase (optional)
-              <div class="inputWrap">
-                <span class="prefix">$</span>
-                <input id="purchase" inputmode="decimal" placeholder="0.00">
-              </div>
-            </label>
-          </div>
-
-          <div class="grid3 results">
-            <div>
-              <div class="muted">Total Unpaid</div>
-              <div id="totalUnpaid" class="kpi">—</div>
+        <div class="grid2">
+          <label>Current Balance
+            <div class="inputWrap">
+              <span class="prefix">$</span>
+              <input id="balance" inputmode="decimal" placeholder="0.00">
             </div>
-            <div>
-              <div class="muted">Left After Bills</div>
-              <div id="leftAfter" class="kpi">—</div>
-            </div>
-            <div>
-              <div class="muted">After Purchase Left</div>
-              <div id="afterBuy" class="kpi">—</div>
-            </div>
-          </div>
+          </label>
 
-          <div class="actions">
-            <span id="coverageBadge" class="pill warning">Warning</span>
-            <span id="buyBadge" class="pill warning">Warning</span>
-          </div>
-
-          <!-- Cadence summary -->
-          <div class="muted small cadence" id="cadenceLine"></div>
-          <div class="muted small" id="cadenceEarly"></div>
-          <div class="muted small" id="cadenceLate"></div>
+          <label>Purchase (optional)
+            <div class="inputWrap">
+              <span class="prefix">$</span>
+              <input id="purchase" inputmode="decimal" placeholder="0.00">
+            </div>
+          </label>
         </div>
-      </section>
 
-      <!-- Bills -->
-      <section id="tab-bills" class="tabpane">
-        <div class="card">
-          <h2>Bills</h2>
-
-          <div class="row gap">
-            <button id="addBillBtn" class="btn">+ Add Bill</button>
-            <button id="clearPaidBtn" class="btn ghost">Clear “Paid”</button>
-            <button id="resetAllBtn" class="btn danger ghost">Reset All Data</button>
+        <div class="grid3 results">
+          <div>
+            <div class="muted">Total Unpaid</div>
+            <div id="totalUnpaid" class="kpi">—</div>
           </div>
-
-          <table id="billTable">
-            <thead>
-              <tr>
-                <th>Bill</th><th>Due (day)</th><th>Amount</th><th>Paid?</th><th></th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-
-          <div class="row gap" style="margin-top:12px">
-            <button id="printCalBtn" class="btn">🖨️ Print Calendar</button>
+          <div>
+            <div class="muted">Left After Bills</div>
+            <div id="leftAfter" class="kpi">—</div>
           </div>
-
-          <div id="calSheet" style="display:none"></div>
+          <div>
+            <div class="muted">After Purchase Left</div>
+            <div id="afterBuy" class="kpi">—</div>
+          </div>
         </div>
-      </section>
-    </div>
+
+        <div class="actions">
+          <span id="coverageBadge" class="pill warning">Warning</span>
+          <span id="buyBadge" class="pill warning">Warning</span>
+        </div>
+
+        <!-- Cadence summary (auto-filled by app.js) -->
+        <div class="muted small cadence" id="cadenceLine"></div>
+        <div class="muted small" id="cadenceEarly"></div>
+        <div class="muted small" id="cadenceLate"></div>
+
+        <!-- Subtle save timestamp -->
+        <div id="saveHint" class="muted tiny" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Bills -->
+    <section id="tab-bills" class="tabpane">
+      <div class="card">
+        <h2>Bills</h2>
+
+        <div class="row gap">
+          <button id="addBillBtn" class="btn">+ Add Bill</button>
+          <button id="clearPaidBtn" class="btn ghost">Clear “Paid”</button>
+
+          <!-- Hidden Import/Export controls; unhide later if you want -->
+          <button id="exportBtn" class="btn ghost hidden">Export backup (JSON)</button>
+          <label class="file hidden">
+            <input type="file" id="importFile" accept="application/json" hidden>
+            <span class="btn ghost">Import</span>
+          </label>
+        </div>
+
+        <table id="billTable">
+          <thead>
+            <tr>
+              <th>Bill</th><th>Due (day)</th><th>Amount</th><th>Paid?</th><th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer (file last-modified) -->
+    <footer id="lastUpdated" class="footer"></footer>
   </div>
 
+  <!-- Template for bill rows -->
   <template id="billRowTpl">
     <tr>
       <td><input class="b-name"></td>
-      <td><input class="b-due" inputmode="numeric"></td>
+      <td><input class="b-due" inputmode="numeric" placeholder="1–31"></td>
       <td>
         <div class="inputWrap small">
           <span class="prefix">$</span>
-          <input class="b-amt" inputmode="decimal" value="0">
+          <input class="b-amt" inputmode="decimal" placeholder="0.00">
         </div>
       </td>
       <td class="center"><input type="checkbox" class="b-paid"></td>
-      <td><button class="rowDel btn ghost">Del</button></td>
+      <td><button class="rowDel btn danger">DELETE</button></td>
     </tr>
   </template>
 

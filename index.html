@@ -2,42 +2,39 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ROUGH DRAFT — Budget Terminal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Budget Terminal</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#F2E7CE"/>
+  <meta name="theme-color" content="#FAFAF8"/>
   <link rel="icon" href="icons/icon-192.png">
   <link href="style.css" rel="stylesheet">
 </head>
 <body>
   <div id="app">
-    <!-- Header / Tabs -->
+    <!-- Header -->
     <nav class="tabs">
-      <div class="brand">ROUGH DRAFT</div>
+      <div class="brand">BUDGET</div>
       <span id="todayDate" class="today muted small"></span>
       <div class="spacer"></div>
-      <button class="tab active" data-tab="quick">Quick Check</button>
-      <button class="tab" data-tab="bills">Bills</button>
-      <!-- Optional lock toggle (keystroke "L" also works) -->
-      <button id="lockBtn" class="tab ghost" title="Blur amounts (L)">Lock</button>
+      <button class="tab active" data-tab="quick">QUICK CHECK</button>
+      <button class="tab" data-tab="bills">BILLS</button>
+      <button class="tab" data-tab="help">HELP</button>
     </nav>
 
-    <!-- Quick Check -->
+    <!-- QUICK CHECK -->
     <section id="tab-quick" class="tabpane active">
       <div class="card">
-        <h2>Quick Check</h2>
+        <h2>QUICK CHECK</h2>
 
         <div class="grid2">
-          <label>Current Balance
+          <label>CURRENT BALANCE
             <div class="inputWrap">
-              <span class="prefix">$</span>
               <input id="balance" inputmode="decimal" placeholder="0.00">
             </div>
           </label>
 
-          <label>Purchase (optional)
+          <label>PURCHASE (OPTIONAL)
             <div class="inputWrap">
-              <span class="prefix">$</span>
               <input id="purchase" inputmode="decimal" placeholder="0.00">
             </div>
           </label>
@@ -45,77 +42,91 @@
 
         <div class="grid3 results">
           <div>
-            <div class="muted">Total Unpaid</div>
+            <div class="muted">TOTAL UNPAID</div>
             <div id="totalUnpaid" class="kpi">—</div>
           </div>
           <div>
-            <div class="muted">Left After Bills</div>
+            <div class="muted">LEFT AFTER BILLS</div>
             <div id="leftAfter" class="kpi">—</div>
           </div>
           <div>
-            <div class="muted">After Purchase Left</div>
+            <div class="muted">AFTER PURCHASE LEFT</div>
             <div id="afterBuy" class="kpi">—</div>
           </div>
         </div>
 
         <div class="actions">
-          <span id="coverageBadge" class="pill warning">Warning</span>
-          <span id="buyBadge" class="pill warning">Warning</span>
+          <span id="coverageBadge" class="pill warning">WARNING</span>
+          <span id="buyBadge" class="pill warning">WARNING</span>
         </div>
 
-        <!-- Cadence summary (auto-filled by app.js) -->
+        <!-- 50/30/20 Split -->
+        <div class="divider"></div>
+        <h3>50/30/20 SPLIT</h3>
+        <label>ENTER INCOME AMOUNT
+          <div class="inputWrap">
+            <input id="incomeInput" inputmode="decimal" placeholder="0.00">
+          </div>
+        </label>
+        <div id="splitResult" class="muted small"></div>
+
+        <!-- Cadence summary -->
         <div class="muted small cadence" id="cadenceLine"></div>
         <div class="muted small" id="cadenceEarly"></div>
         <div class="muted small" id="cadenceLate"></div>
 
-        <!-- Subtle save timestamp -->
-        <div id="saveHint" class="muted tiny" aria-live="polite"></div>
+        <footer id="lastUpdated" class="muted small" style="text-align:center; margin-top:16px;"></footer>
       </div>
     </section>
 
-    <!-- Bills -->
+    <!-- BILLS -->
     <section id="tab-bills" class="tabpane">
       <div class="card">
-        <h2>Bills</h2>
+        <h2>BILLS</h2>
 
         <div class="row gap">
-          <button id="addBillBtn" class="btn">+ Add Bill</button>
-          <button id="clearPaidBtn" class="btn ghost">Clear “Paid”</button>
-
-          <!-- Hidden Import/Export controls; unhide later if you want -->
-          <button id="exportBtn" class="btn ghost hidden">Export backup (JSON)</button>
-          <label class="file hidden">
-            <input type="file" id="importFile" accept="application/json" hidden>
-            <span class="btn ghost">Import</span>
-          </label>
+          <button id="addBillBtn" class="btn">+ ADD BILL</button>
+          <button id="clearPaidBtn" class="btn ghost">CLEAR PAID</button>
         </div>
 
         <table id="billTable">
           <thead>
             <tr>
-              <th>Bill</th><th>Due (day)</th><th>Amount</th><th>Paid?</th><th></th>
+              <th>BILL</th><th>DATE</th><th>AMOUNT</th><th>PAID</th><th></th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
+
+        <!-- Print hidden for now -->
+        <div class="row gap" style="margin-top:12px; display:none;">
+          <button id="printCalBtn" class="btn">🖨️ PRINT CALENDAR</button>
+        </div>
+
+        <div id="calSheet" style="display:none"></div>
       </div>
     </section>
 
-    <!-- Footer (file last-modified) -->
-    <footer id="lastUpdated" class="footer"></footer>
+    <!-- HELP -->
+    <section id="tab-help" class="tabpane">
+      <div class="card">
+        <h2>HELP</h2>
+        <p class="muted small">
+          Enter your balance and bills under “Quick Check” to see your coverage.
+          Use “Add Bill” to list monthly payments with due dates and amounts.
+          The 50/30/20 tool splits your income automatically.
+          Data is saved locally in your browser.
+        </p>
+      </div>
+    </section>
   </div>
 
-  <!-- Template for bill rows -->
+  <!-- Template -->
   <template id="billRowTpl">
     <tr>
       <td><input class="b-name"></td>
-      <td><input class="b-due" inputmode="numeric" placeholder="1–31"></td>
-      <td>
-        <div class="inputWrap small">
-          <span class="prefix">$</span>
-          <input class="b-amt" inputmode="decimal" placeholder="0.00">
-        </div>
-      </td>
+      <td><input class="b-due" type="date"></td>
+      <td><div class="inputWrap small"><input class="b-amt" inputmode="decimal"></div></td>
       <td class="center"><input type="checkbox" class="b-paid"></td>
       <td><button class="rowDel btn danger">DELETE</button></td>
     </tr>
